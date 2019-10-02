@@ -81,6 +81,10 @@ defmodule Topology do
                   end
                 )
 
+              # neighbors2 = [[i, j, num - 1], [num - 1, j, k], [i, num - 1, k]]
+              # all = Enum.concat(neighbors, neighbors2)
+
+              # IO.inspect(all)
               if(algorithm == "gossip") do
                 weight_state = %{
                   :master => Master.via_tuple("master"),
