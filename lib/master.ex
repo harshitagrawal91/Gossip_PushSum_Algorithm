@@ -1,12 +1,12 @@
 defmodule Master do
   use GenServer
 
-  def start(main, numNodes, topology, algorithm) do
+  def start(main, nodesNum, topology, algorithm) do
     App.start("", "")
 
     state = %{
       :main => main,
-      :numNodes => numNodes,
+      :nodesNum => nodesNum,
       :topology => topology,
       :algorithm => algorithm,
       :conv => 0,
@@ -19,7 +19,7 @@ defmodule Master do
   end
 
   def init(state) do
-    numNodes = state[:numNodes]
+    nodesNum = state[:nodesNum]
     topology = state[:topology]
     algorithm = state[:algorithm]
     # IO.puts(numNodes)
@@ -30,17 +30,17 @@ defmodule Master do
         # IO.puts(topology)
         case topology do
           "full" ->
-            Topology.create_topology(topology, numNodes, algorithm)
-            GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:rumor, "Message"})
+            Topology.create_topology(topology, nodesNum, algorithm)
+            GenServer.cast(via_tuple(Enum.random(0..(nodesNum - 1))), {:rumor, "Message"})
 
           "line" ->
-            Topology.create_topology(topology, numNodes, algorithm)
-            GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:rumor, "Message"})
+            Topology.create_topology(topology, nodesNum, algorithm)
+            GenServer.cast(via_tuple(Enum.random(0..(nodesNum - 1))), {:rumor, "Message"})
 
           "3Dtorus" ->
-            num = round(:math.pow(numNodes, 1 / 3))
+            num = round(:math.pow(nodesNum, 1 / 3))
             GenServer.cast(self(), {:set_nodes, num * num * num})
-            Topology.create_topology(topology, numNodes, algorithm)
+            Topology.create_topology(topology, nodesNum, algorithm)
 
             GenServer.cast(
               via_tuple([
@@ -52,52 +52,55 @@ defmodule Master do
             )
 
           "rand2D" ->
-            Topology.create_topology(topology, numNodes, algorithm)
-            GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:rumor, "Message"})
-            "honeycomb" ->
-              num = round(:math.pow(numNodes, 1/2))
-              GenServer.cast(self(), {:set_nodes, num*num})
+            Topology.create_topology(topology, nodesNum, algorithm)
+            GenServer.cast(via_tuple(Enum.random(0..(nodesNum - 1))), {:rumor, "Message"})
 
-                Topology.create_topology(topology, numNodes, algorithm)
+          "honeycomb" ->
+            num = round(:math.pow(nodesNum, 1 / 2))
+            GenServer.cast(self(), {:set_nodes, num * num})
 
-                GenServer.cast(
-                  via_tuple([
-                    Enum.random(0..(num - 1)),
-                    Enum.random(0..(num - 1))
-                  ]),
-                  {:rumor, "Message"}
-                )
-              "randhoneycomb" ->
-                num = round(:math.pow(numNodes, 1/2))
-                GenServer.cast(self(), {:set_nodes, num*num})
+            Topology.create_topology(topology, nodesNum, algorithm)
 
-                Topology.create_topology(topology, numNodes, algorithm)
+            GenServer.cast(
+              via_tuple([
+                Enum.random(0..(num - 1)),
+                Enum.random(0..(num - 1))
+              ]),
+              {:rumor, "Message"}
+            )
 
-                GenServer.cast(
-                  via_tuple([
-                    Enum.random(0..(num - 1)),
-                    Enum.random(0..(num - 1))
-                  ]),
-                  {:rumor, "Message"}
-                )
+          "randhoneycomb" ->
+            num = round(:math.pow(nodesNum, 1 / 2))
+            GenServer.cast(self(), {:set_nodes, num * num})
+
+            Topology.create_topology(topology, nodesNum, algorithm)
+
+            GenServer.cast(
+              via_tuple([
+                Enum.random(0..(num - 1)),
+                Enum.random(0..(num - 1))
+              ]),
+              {:rumor, "Message"}
+            )
+
           _ ->
             IO.puts("Invaid topology!")
         end
 
-      "pushsum" ->
+      "push-sum" ->
         case topology do
           "full" ->
-            Topology.create_topology(topology, numNodes, algorithm)
-            GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:get_sum, 0, 0})
+            Topology.create_topology(topology, nodesNum, algorithm)
+            GenServer.cast(via_tuple(Enum.random(0..(nodesNum - 1))), {:get_sum, 0, 0})
 
           "line" ->
-            Topology.create_topology(topology, numNodes, algorithm)
-            GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:get_sum, 0, 0})
+            Topology.create_topology(topology, nodesNum, algorithm)
+            GenServer.cast(via_tuple(Enum.random(0..(nodesNum - 1))), {:get_sum, 0, 0})
 
           "3Dtorus" ->
-            num = round(:math.pow(numNodes, 1 / 3))
+            num = round(:math.pow(nodesNum, 1 / 3))
             GenServer.cast(self(), {:set_nodes, num * num * num})
-            Topology.create_topology(topology, numNodes, algorithm)
+            Topology.create_topology(topology, nodesNum, algorithm)
 
             GenServer.cast(
               via_tuple([
@@ -109,34 +112,37 @@ defmodule Master do
             )
 
           "rand2D" ->
-            Topology.create_topology(topology, numNodes, algorithm)
-            GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:get_sum, 0, 0})
-            "honeycomb" ->
-              num = round(:math.pow(numNodes, 1/2))
-              GenServer.cast(self(), {:set_nodes, num*num})
-              # IO.puts("honeycomb")
-              Topology.create_topology(topology, numNodes, algorithm)
+            Topology.create_topology(topology, nodesNum, algorithm)
+            GenServer.cast(via_tuple(Enum.random(0..(nodesNum - 1))), {:get_sum, 0, 0})
 
-              GenServer.cast(
-                via_tuple([
-                  Enum.random(0..(num - 1)),
-                  Enum.random(0..(num - 1))
-                ]),
-                {:get_sum, 0, 0}
-              )
-              "randhoneycomb" ->
-                num = round(:math.pow(numNodes, 1/2))
-                GenServer.cast(self(), {:set_nodes, num*num})
+          "honeycomb" ->
+            num = round(:math.pow(nodesNum, 1 / 2))
+            GenServer.cast(self(), {:set_nodes, num * num})
+            # IO.puts("honeycomb")
+            Topology.create_topology(topology, nodesNum, algorithm)
 
-                Topology.create_topology(topology, numNodes, algorithm)
+            GenServer.cast(
+              via_tuple([
+                Enum.random(0..(num - 1)),
+                Enum.random(0..(num - 1))
+              ]),
+              {:get_sum, 0, 0}
+            )
 
-                GenServer.cast(
-                  via_tuple([
-                    Enum.random(0..(num - 1)),
-                    Enum.random(0..(num - 1))
-                  ]),
-                  {:get_sum, 0, 0}
-                )
+          "randhoneycomb" ->
+            num = round(:math.pow(nodesNum, 1 / 2))
+            GenServer.cast(self(), {:set_nodes, num * num})
+
+            Topology.create_topology(topology, nodesNum, algorithm)
+
+            GenServer.cast(
+              via_tuple([
+                Enum.random(0..(num - 1)),
+                Enum.random(0..(num - 1))
+              ]),
+              {:get_sum, 0, 0}
+            )
+
           _ ->
             IO.puts("Invaid topology!")
         end
@@ -154,9 +160,9 @@ defmodule Master do
     state = Map.put(state, :conv, state[:conv] + 1)
     state = Map.put(state, :died, state[:died] + 1)
 
-    if(state[:died] / state[:numNodes] >= state[:convrate]) do
+    if(state[:died] / state[:nodesNum] >= state[:convrate]) do
       s =
-        "#{state[:conv] * 100 / state[:numNodes]} % converged in #{endTime - state[:starttime]} ms"
+        "#{state[:conv] * 100 / state[:nodesNum]} % converged in #{endTime - state[:starttime]} ms"
 
       send(state[:main], s)
       die(state, endTime)
@@ -176,7 +182,7 @@ defmodule Master do
   end
 
   def handle_cast({:set_nodes, num}, state) do
-    state = Map.put(state, :numNodes, num)
+    state = Map.put(state, :nodesNum, num)
     {:noreply, state}
   end
 
@@ -195,7 +201,7 @@ defmodule Master do
 
   def die(state, endTime) do
     IO.puts(
-      " #{state[:conv] * 100 / state[:numNodes]} % converged in #{endTime - state[:starttime]} ms"
+      " #{state[:conv] * 100 / state[:nodesNum]} % converged in #{endTime - state[:starttime]} ms"
     )
 
     Process.exit(self(), :normal)
@@ -206,7 +212,7 @@ defmodule Master do
     endTime = :os.system_time(:millisecond)
 
     IO.puts(
-      "##{state[:conv] * 100 / state[:numNodes]} % converged in #{endTime - state[:starttime]} ms"
+      "##{state[:conv] * 100 / state[:nodesNum]} % converged in #{endTime - state[:starttime]} ms"
     )
   end
 
