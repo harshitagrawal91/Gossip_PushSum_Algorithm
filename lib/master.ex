@@ -22,9 +22,12 @@ defmodule Master do
     numNodes = state[:numNodes]
     topology = state[:topology]
     algorithm = state[:algorithm]
-
+    # IO.puts(numNodes)
+    # IO.puts(algorithm)
+    # IO.puts(topology)
     case algorithm do
       "gossip" ->
+        # IO.puts(topology)
         case topology do
           "full" ->
             Topology.create_topology(topology, numNodes, algorithm)
@@ -34,7 +37,7 @@ defmodule Master do
             Topology.create_topology(topology, numNodes, algorithm)
             GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:rumor, "Message"})
 
-          "3D" ->
+          "3Dtorus" ->
             num = round(:math.pow(numNodes, 1 / 3))
             GenServer.cast(self(), {:set_nodes, num * num * num})
             Topology.create_topology(topology, numNodes, algorithm)
@@ -51,7 +54,32 @@ defmodule Master do
           "rand2D" ->
             Topology.create_topology(topology, numNodes, algorithm)
             GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:rumor, "Message"})
+            "honeycomb" ->
+              num = round(:math.pow(numNodes, 1/2))
+              GenServer.cast(self(), {:set_nodes, num*num})
 
+                Topology.create_topology(topology, numNodes, algorithm)
+
+                GenServer.cast(
+                  via_tuple([
+                    Enum.random(0..(num - 1)),
+                    Enum.random(0..(num - 1))
+                  ]),
+                  {:rumor, "Message"}
+                )
+              "randhoneycomb" ->
+                num = round(:math.pow(numNodes, 1/2))
+                GenServer.cast(self(), {:set_nodes, num*num})
+
+                Topology.create_topology(topology, numNodes, algorithm)
+
+                GenServer.cast(
+                  via_tuple([
+                    Enum.random(0..(num - 1)),
+                    Enum.random(0..(num - 1))
+                  ]),
+                  {:rumor, "Message"}
+                )
           _ ->
             IO.puts("Invaid topology!")
         end
@@ -66,7 +94,7 @@ defmodule Master do
             Topology.create_topology(topology, numNodes, algorithm)
             GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:get_sum, 0, 0})
 
-          "3D" ->
+          "3Dtorus" ->
             num = round(:math.pow(numNodes, 1 / 3))
             GenServer.cast(self(), {:set_nodes, num * num * num})
             Topology.create_topology(topology, numNodes, algorithm)
@@ -83,7 +111,32 @@ defmodule Master do
           "rand2D" ->
             Topology.create_topology(topology, numNodes, algorithm)
             GenServer.cast(via_tuple(Enum.random(0..(numNodes - 1))), {:get_sum, 0, 0})
+            "honeycomb" ->
+              num = round(:math.pow(numNodes, 1/2))
+              GenServer.cast(self(), {:set_nodes, num*num})
+              # IO.puts("honeycomb")
+              Topology.create_topology(topology, numNodes, algorithm)
 
+              GenServer.cast(
+                via_tuple([
+                  Enum.random(0..(num - 1)),
+                  Enum.random(0..(num - 1))
+                ]),
+                {:get_sum, 0, 0}
+              )
+              "randhoneycomb" ->
+                num = round(:math.pow(numNodes, 1/2))
+                GenServer.cast(self(), {:set_nodes, num*num})
+
+                Topology.create_topology(topology, numNodes, algorithm)
+
+                GenServer.cast(
+                  via_tuple([
+                    Enum.random(0..(num - 1)),
+                    Enum.random(0..(num - 1))
+                  ]),
+                  {:get_sum, 0, 0}
+                )
           _ ->
             IO.puts("Invaid topology!")
         end

@@ -57,9 +57,9 @@ defmodule Topology do
           end
         end
 
-      "3D" ->
+      "3Dtorus" ->
         num = round(:math.pow(numNodes, 1 / 3))
-        GenServer.cast(self(), {:set_nodes, num * num * num})
+        # GenServer.cast(self(), {:set_nodes, num * num * num})
 
         for i <- 0..(num - 1) do
           for j <- 0..(num - 1) do
@@ -114,7 +114,7 @@ defmodule Topology do
           neighbors =
             Enum.map(
               Enum.filter(nodes, fn [n2, x2, y2] ->
-                (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) < 0.01 and n2 != n1
+                (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) < 0.1 and n2 != n1
               end),
               fn [n, _, _] -> n end
             )
@@ -144,6 +144,220 @@ defmodule Topology do
             Nodes.start(n1, wState)
           end
         end)
+
+      "honeycomb" ->
+        num = round(:math.pow(numNodes, 1 / 2))
+        # GenServer.cast(self(), {:set_nodes, num*num})
+        # IO.inspect(num)
+
+        for i <- 0..(num - 1) do
+          for j <- 0..(num - 1) do
+            if rem(i, 2) == 0 do
+              neighbors =
+                Enum.reject([[i + 1, j], [i - 1, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x == num || y == num
+                end)
+
+              neighbors2 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x == num || y == num - 1 || rem(y, 2) == 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j + 1] end)
+
+              neighbors3 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= 0 || x == num || y == num || rem(y, 2) != 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j - 1] end)
+
+              all1 = Enum.concat(neighbors, neighbors2)
+              all = Enum.concat(all1, neighbors3)
+
+              if(algorithm == "gossip") do
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :msg => "",
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              else
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :sum => i * num * num + j * num,
+                  :weight => 1,
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              end
+
+              # IO.inspect(all)
+            else
+              neighbors =
+                Enum.reject([[i + 1, j], [i - 1, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x == num || y == num
+                end)
+
+              neighbors2 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x >= num || y >= num || rem(y, 2) != 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j + 1] end)
+
+              neighbors3 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= 0 || x >= num || y >= num || rem(y, 2) == 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j - 1] end)
+
+              all1 = Enum.concat(neighbors, neighbors2)
+              all = Enum.concat(all1, neighbors3)
+
+              if(algorithm == "gossip") do
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :msg => "",
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              else
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :sum => i * num * num + j * num,
+                  :weight => 1,
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              end
+
+              # IO.inspect(all)
+            end
+          end
+        end
+
+      "randhoneycomb" ->
+        num = round(:math.pow(numNodes, 1 / 2))
+
+
+        # IO.inspect(num)
+
+        for i <- 0..(num - 1) do
+          for j <- 0..(num - 1) do
+            if rem(i, 2) == 0 do
+              neighbors =
+                Enum.reject([[i + 1, j], [i - 1, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x == num || y == num
+                end)
+
+              neighbors2 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x == num || y == num - 1 || rem(y, 2) == 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j + 1] end)
+
+              neighbors3 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= 0 || x == num || y == num || rem(y, 2) != 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j - 1] end)
+
+              all1 = Enum.concat(neighbors, neighbors2)
+
+              all2 = Enum.concat(all1, neighbors3)
+
+              random = [[Enum.random(0..(num - 1)), Enum.random(0..(num - 1))]]
+              all = Enum.concat(all2, random)
+              if(algorithm == "gossip") do
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :msg => "",
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              else
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :sum => i * num * num + j * num,
+                  :weight => 1,
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              end
+
+              # IO.inspect(all)
+            else
+              neighbors =
+                Enum.reject([[i + 1, j], [i - 1, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x == num || y == num
+                end)
+
+              neighbors2 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= -1 || x >= num || y >= num || rem(y, 2) != 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j + 1] end)
+
+              neighbors3 =
+                Enum.reject([[i, j]], fn [x, y] ->
+                  x <= -1 || y <= 0 || x >= num || y >= num || rem(y, 2) == 0
+                end)
+                |> Enum.map(fn [i, j] -> [i, j - 1] end)
+
+              all1 = Enum.concat(neighbors, neighbors2)
+              all = Enum.concat(all1, neighbors3)
+
+              if(algorithm == "gossip") do
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :msg => "",
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              else
+                wState = %{
+                  :master => Master.via_tuple("master"),
+                  :id => [i, j],
+                  :state => "initial",
+                  :count => 0,
+                  :sum => i * num * num + j * num,
+                  :weight => 1,
+                  :neighbors => all
+                }
+
+                Nodes.start([i, j], wState)
+              end
+
+              # IO.inspect(all)
+            end
+          end
+        end
 
       _ ->
         IO.puts("Invaid topology!")
